@@ -1,5 +1,5 @@
+import 'package:flutter/material.dart';
 import 'package:flutterassignement/screens/add_task_screen.dart';
-import 'package:get/get.dart';
 
 import '../screens/home_screen.dart';
 
@@ -8,16 +8,11 @@ class Routes {
   static String addTaskScreen = '/add_task_screen';
 }
 
-var transitionAnimation = Transition.rightToLeftWithFade;
-final getPages = [
-  GetPage(
-    name: Routes.homeScreen,
-    page: () => const HomeScreen(),
-    transition: transitionAnimation,
-  ),
-  GetPage(
-    name: Routes.addTaskScreen,
-    page: () => const AddTaskScreen(),
-    transition: transitionAnimation,
-  ),
-];
+
+class RouteConfig {
+  static final Map<String, WidgetBuilder> routes = {
+    Routes.homeScreen: (_) => const HomeScreen(),
+    Routes.addTaskScreen: (_) => const AddTaskScreen(),
+
+  };
+}
