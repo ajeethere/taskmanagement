@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutterassignement/database/database_helper.dart';
 import 'package:flutterassignement/router/navigation_state.dart';
 import 'package:flutterassignement/router/routes.dart';
+import 'package:flutterassignement/screens/add_task_screen.dart';
 import 'package:flutterassignement/screens/home_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final dbHelper = DatabaseHelper();
+
+  final db = await dbHelper.database;
+
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -13,26 +20,22 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final navigationState = ref.watch(navigationProvider);
+    final currentRoute = ref.watch(navigationStateProvider);
 
-    // Fetch the screen from the RouteConfig map using the current route
-    Widget screen =
-        RouteConfig.routes[navigationState.currentRoute]?.call(context) ??
-            const HomeScreen();
+    // Widget screen =
+    //     RouteConfig.routes[navigationState.currentRoute]?.call(context) ??
+    //         const HomeScreen();
 
     return MaterialApp(
-      home: screen,
+      initialRoute: currentRoute,
       onGenerateRoute: (settings) {
-        final builder = RouteConfig.routes[settings.name];
-        if (builder != null) {
-          return MaterialPageRoute(
-            builder: builder,
-            settings: settings,
-          );
-        } else {
-          return MaterialPageRoute(
-            builder: (_) => const HomeScreen(),
-          );
+        switch (settings.name) {
+          case Routes.homeScreen:
+            return MaterialPageRoute(builder: (_) => const HomeScreen());
+          case Routes.addTaskScreen:
+            return MaterialPageRoute(builder: (_) =>  AddTaskScreen());
+          default:
+            return null;
         }
       },
     );

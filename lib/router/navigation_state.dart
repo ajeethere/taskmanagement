@@ -19,6 +19,7 @@ class NavigationNotifier extends StateNotifier<NavigationState> {
   }
 }
 
+// Create a provider for navigation state
 final navigationProvider = StateNotifierProvider<NavigationNotifier, NavigationState>((ref) {
   return NavigationNotifier();
 });

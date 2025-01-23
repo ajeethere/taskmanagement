@@ -1,50 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutterassignement/utils/app_date_utils.dart';
+import '../states/add_task_state.dart';
 
-class AddTaskScreen extends StatefulWidget {
-  const AddTaskScreen({super.key});
+class AddTaskScreen extends ConsumerWidget {
 
-  @override
-  State<AddTaskScreen> createState() => _AddTaskScreenState();
-}
-
-class _AddTaskScreenState extends State<AddTaskScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _taskNameController = TextEditingController();
-  final TextEditingController _taskDescriptionController = TextEditingController();
-  DateTime? _dueDate;
-  String _priority = 'Low'; // Default priority value
 
-  // Function to pick a date
-  Future<void> _pickDate(BuildContext context) async {
-    DateTime? selectedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-    );
+  AddTaskScreen({super.key});
+
+  Future<void> _pickDate(BuildContext context, WidgetRef ref) async {
+    DateTime? selectedDate = await AppDateUtils.pickDate(context);
     if (selectedDate != null) {
-      setState(() {
-        _dueDate = selectedDate;
-      });
-    }
-  }
-
-  // Function to handle form submission
-  void _submitTask() {
-    if (_formKey.currentState!.validate()) {
-      // Save the task
-      print('Task Name: ${_taskNameController.text}');
-      print('Description: ${_taskDescriptionController.text}');
-      print('Due Date: $_dueDate');
-      print('Priority: $_priority');
-
-      // Navigate back or show a confirmation message
-      Navigator.pop(context);
+      ref.read(taskNotifierProvider.notifier).setDueDate(selectedDate);
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final taskState = ref.watch(taskNotifierProvider);
+    final taskNotifier = ref.read(taskNotifierProvider.notifier);
+    final TextEditingController taskNameController = TextEditingController(text: taskState.taskName ?? '');
+    final TextEditingController taskDescriptionController = TextEditingController(text: taskState.taskDescription ?? '');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Task'),
@@ -52,16 +30,19 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key: _formKey,
+          key: _formKey, // Assign GlobalKey to Form for validation
           child: ListView(
             children: [
               // Task Name
               TextFormField(
-                controller: _taskNameController,
+                controller: taskNameController,
                 decoration: const InputDecoration(
                   labelText: 'Task Name',
                   border: OutlineInputBorder(),
                 ),
+                onChanged: (value) {
+                  taskNotifier.setTaskName(value);
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a task name';
@@ -73,12 +54,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
               // Task Description
               TextFormField(
-                controller: _taskDescriptionController,
+                controller: taskDescriptionController,
                 decoration: const InputDecoration(
                   labelText: 'Description',
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 3,
+                onChanged: (value) {
+                  taskNotifier.setTaskDescription(value);
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a description';
@@ -93,14 +77,14 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      _dueDate == null
+                      taskState.dueDate == null
                           ? 'No Due Date Selected'
-                          : 'Due Date: ${_dueDate!.toLocal()}'.split(' ')[0],
+                          : 'Due Date: ${taskState.dueDate!.toLocal().toString().split(' ')[0]}',
                       style: const TextStyle(fontSize: 16),
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () => _pickDate(context),
+                    onPressed: () => _pickDate(context, ref),
                     child: const Text('Select Date'),
                   ),
                 ],
@@ -117,36 +101,30 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   Expanded(
                     child: RadioListTile<String>(
                       value: 'Low',
-                      groupValue: _priority,
+                      groupValue: taskState.priority,
                       title: const Text('Low'),
                       onChanged: (value) {
-                        setState(() {
-                          _priority = value!;
-                        });
+                        taskNotifier.setPriority(value!);
                       },
                     ),
                   ),
                   Expanded(
                     child: RadioListTile<String>(
                       value: 'Medium',
-                      groupValue: _priority,
+                      groupValue: taskState.priority,
                       title: const Text('Medium'),
                       onChanged: (value) {
-                        setState(() {
-                          _priority = value!;
-                        });
+                        taskNotifier.setPriority(value!);
                       },
                     ),
                   ),
                   Expanded(
                     child: RadioListTile<String>(
                       value: 'High',
-                      groupValue: _priority,
+                      groupValue: taskState.priority,
                       title: const Text('High'),
                       onChanged: (value) {
-                        setState(() {
-                          _priority = value!;
-                        });
+                        taskNotifier.setPriority(value!);
                       },
                     ),
                   ),
@@ -156,7 +134,19 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
               // Submit Button
               ElevatedButton(
-                onPressed: _submitTask,
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    if (taskState.dueDate == null) {
+
+                      return;
+                    }
+                    ref.read(taskNotifierProvider.notifier).insertTask();
+                    ref.read(taskNotifierProvider.notifier).reset();
+                    Navigator.pop(context);
+                  } else {
+
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   textStyle: const TextStyle(fontSize: 18),
