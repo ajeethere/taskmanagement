@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutterassignement/router/routes.dart';
 import 'package:flutterassignement/states/tasks_state.dart';
+import 'package:flutterassignement/utils/utils.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
-
-
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final taskState = ref.watch(tasksNotifier);
     final taskNotifier = ref.read(tasksNotifier.notifier);
 
-    taskNotifier.getTasks();
+    if (!taskState.gotData) {
+      taskNotifier.getTasks();
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -34,19 +35,24 @@ class HomeScreen extends ConsumerWidget {
                     children: [
                       Text(
                         task.name,
-                        style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        task.description ?? 'No Description',
+                        'Description : ${task.description ?? 'No Description'}',
                         style: const TextStyle(color: Colors.black54),
                       ),
                       Text(
                         'Priority: ${task.priority ?? 'N/A'}',
-                        style: const TextStyle(color: Colors.black54, fontSize: 14),
+                        style: const TextStyle(
+                            color: Colors.black54, fontSize: 14),
                       ),
                       Text(
                         'Due Date: ${task.dueDate ?? 'N/A'}',
-                        style: const TextStyle(color: Colors.black54, fontSize: 14),
+                        style: const TextStyle(
+                            color: Colors.black54, fontSize: 14),
                       ),
                     ],
                   ),
@@ -56,13 +62,19 @@ class HomeScreen extends ConsumerWidget {
                     IconButton(
                       icon: const Icon(Icons.delete),
                       onPressed: () {
-
+                        showDeleteConfirmationDialog(context, () async {
+                          await taskNotifier
+                              .deleteTask(taskState.tasks[index].id);
+                          taskNotifier.getTasks();
+                        });
                       },
                     ),
                     IconButton(
                       icon: const Icon(Icons.edit),
-                      onPressed: () {
-                        // Handle edit action here (e.g., navigate to the edit screen)
+                      onPressed: () async {
+                        await Navigator.pushNamed(context, Routes.addTaskScreen,
+                            arguments: {"id": taskState.tasks[index].id});
+                        taskNotifier.getTasks();
                       },
                     ),
                   ],
@@ -73,8 +85,9 @@ class HomeScreen extends ConsumerWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, Routes.addTaskScreen);
+        onPressed: () async {
+          await Navigator.pushNamed(context, Routes.addTaskScreen);
+          taskNotifier.getTasks();
         },
         tooltip: 'Add',
         child: const Icon(Icons.add),

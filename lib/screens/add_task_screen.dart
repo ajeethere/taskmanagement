@@ -4,7 +4,6 @@ import 'package:flutterassignement/utils/app_date_utils.dart';
 import '../states/add_task_state.dart';
 
 class AddTaskScreen extends ConsumerWidget {
-
   final _formKey = GlobalKey<FormState>();
 
   AddTaskScreen({super.key});
@@ -20,8 +19,15 @@ class AddTaskScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final taskState = ref.watch(taskNotifierProvider);
     final taskNotifier = ref.read(taskNotifierProvider.notifier);
-    final TextEditingController taskNameController = TextEditingController(text: taskState.taskName ?? '');
-    final TextEditingController taskDescriptionController = TextEditingController(text: taskState.taskDescription ?? '');
+    final TextEditingController taskNameController =
+        TextEditingController(text: taskState.taskName ?? '');
+    final TextEditingController taskDescriptionController =
+        TextEditingController(text: taskState.taskDescription ?? '');
+
+
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+    // final id = args?['id'];
+
 
     return Scaffold(
       appBar: AppBar(
@@ -40,9 +46,7 @@ class AddTaskScreen extends ConsumerWidget {
                   labelText: 'Task Name',
                   border: OutlineInputBorder(),
                 ),
-                onChanged: (value) {
-                  taskNotifier.setTaskName(value);
-                },
+                onChanged: (value) {},
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a task name';
@@ -60,9 +64,7 @@ class AddTaskScreen extends ConsumerWidget {
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 3,
-                onChanged: (value) {
-                  taskNotifier.setTaskDescription(value);
-                },
+                onChanged: (value) {},
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a description';
@@ -84,7 +86,12 @@ class AddTaskScreen extends ConsumerWidget {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () => _pickDate(context, ref),
+                    onPressed: () {
+                      taskNotifier.setTaskName(taskNameController.text);
+                      taskNotifier
+                          .setTaskDescription(taskDescriptionController.text);
+                      _pickDate(context, ref);
+                    },
                     child: const Text('Select Date'),
                   ),
                 ],
@@ -137,15 +144,12 @@ class AddTaskScreen extends ConsumerWidget {
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     if (taskState.dueDate == null) {
-
                       return;
                     }
                     ref.read(taskNotifierProvider.notifier).insertTask();
                     ref.read(taskNotifierProvider.notifier).reset();
                     Navigator.pop(context);
-                  } else {
-
-                  }
+                  } else {}
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
