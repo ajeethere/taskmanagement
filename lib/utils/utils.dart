@@ -31,3 +31,25 @@ Future<void> showDeleteConfirmationDialog(
     },
   );
 }
+
+final lightTheme = ThemeData(
+  brightness: Brightness.light,
+  primarySwatch: Colors.blue,
+  textTheme: const TextTheme(
+    bodyLarge: TextStyle(color: Colors.black), // Default for light mode
+    bodyMedium: TextStyle(color: Colors.black),
+    bodySmall: TextStyle(color: Colors.black),
+  ),
+  cardColor: Colors.white, // Ensure card color is also light
+);
+
+final darkTheme = ThemeData(
+  brightness: Brightness.dark,
+  primarySwatch: Colors.blue,
+  textTheme: const TextTheme(
+    bodyLarge: TextStyle(color: Colors.white), // Default for dark mode
+    bodyMedium: TextStyle(color: Colors.white),
+    bodySmall: TextStyle(color: Colors.white),
+  ),
+  cardColor: Colors.grey[900], // Ensure card color is dark
+);

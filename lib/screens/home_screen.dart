@@ -5,6 +5,8 @@ import 'package:flutterassignement/states/add_task_state.dart';
 import 'package:flutterassignement/states/tasks_state.dart';
 import 'package:flutterassignement/utils/utils.dart';
 
+import '../theme/theme_notifier.dart';
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -13,14 +15,33 @@ class HomeScreen extends ConsumerWidget {
     final taskState = ref.watch(tasksNotifier);
     final taskNotifier = ref.read(tasksNotifier.notifier);
     final addTaskNotifier = ref.read(taskNotifierProvider.notifier);
-
+    final themeNotifier = ref.read(themeNotifierProvider.notifier);
+    final themeMode = ref.watch(themeNotifierProvider);
     if (!taskState.gotData) {
       taskNotifier.getTasks();
+    }
+
+    var textColor = Colors.black;
+
+    if (themeMode == ThemeMode.dark) {
+      textColor = Colors.white;
+    } else {
+      textColor = Colors.black;
     }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Task List'),
+        actions: [
+          IconButton(
+            icon: Icon(themeMode == ThemeMode.dark
+                ? Icons.dark_mode
+                : Icons.light_mode),
+            onPressed: () {
+              themeNotifier.toggleTheme();
+            },
+          ),
+        ],
       ),
       body: ListView.builder(
         itemCount: taskState.tasks.length,
@@ -37,24 +58,22 @@ class HomeScreen extends ConsumerWidget {
                     children: [
                       Text(
                         task.name,
-                        style: const TextStyle(
-                            color: Colors.black,
+                        style: TextStyle(
+                            color: textColor,
                             fontSize: 16,
                             fontWeight: FontWeight.bold),
                       ),
                       Text(
                         'Description : ${task.description ?? 'No Description'}',
-                        style: const TextStyle(color: Colors.black54),
+                        style: TextStyle(color: textColor),
                       ),
                       Text(
                         'Priority: ${task.priority ?? 'N/A'}',
-                        style: const TextStyle(
-                            color: Colors.black54, fontSize: 14),
+                        style: TextStyle(color: textColor, fontSize: 14),
                       ),
                       Text(
                         'Due Date: ${task.dueDate ?? 'N/A'}',
-                        style: const TextStyle(
-                            color: Colors.black54, fontSize: 14),
+                        style: TextStyle(color: textColor, fontSize: 14),
                       ),
                     ],
                   ),
@@ -76,7 +95,11 @@ class HomeScreen extends ConsumerWidget {
                       onPressed: () async {
                         addTaskNotifier.reset();
                         await Navigator.pushNamed(context, Routes.addTaskScreen,
-                            arguments: {"id": taskState.tasks[index].id,"edit":true,"reset":true});
+                            arguments: {
+                              "id": taskState.tasks[index].id,
+                              "edit": true,
+                              "reset": true
+                            });
                         taskNotifier.getTasks();
                       },
                     ),
@@ -90,7 +113,8 @@ class HomeScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           addTaskNotifier.reset();
-          await Navigator.pushNamed(context, Routes.addTaskScreen,arguments: {"reset": true});
+          await Navigator.pushNamed(context, Routes.addTaskScreen,
+              arguments: {"reset": true});
           taskNotifier.getTasks();
         },
         tooltip: 'Add',
