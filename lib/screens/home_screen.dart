@@ -43,72 +43,93 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: taskState.tasks.length,
-        itemBuilder: (context, index) {
-          final task = taskState.tasks[index];
-
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.all(10),
+            child: TextField(
+              // controller: taskDescriptionController,
+              decoration: const InputDecoration(
+                labelText: 'Search',
+                border: OutlineInputBorder(),
+                hintText: "Search Name/Priority/Due Date/Description..."
+              ),
+              onChanged: (value) {
+                taskNotifier.search(value);
+              },
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(bottom: 60),
+              itemCount: taskState.tasks.length,
+              itemBuilder: (context, index) {
+                final task = taskState.tasks[index];
+            
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                  child: Row(
                     children: [
-                      Text(
-                        task.name,
-                        style: TextStyle(
-                            color: textColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              task.name,
+                              style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              'Description : ${task.description ?? 'No Description'}',
+                              style: TextStyle(color: textColor),
+                            ),
+                            Text(
+                              'Priority: ${task.priority ?? 'N/A'}',
+                              style: TextStyle(color: textColor, fontSize: 14),
+                            ),
+                            Text(
+                              'Due Date: ${task.dueDate ?? 'N/A'}',
+                              style: TextStyle(color: textColor, fontSize: 14),
+                            ),
+                          ],
+                        ),
                       ),
-                      Text(
-                        'Description : ${task.description ?? 'No Description'}',
-                        style: TextStyle(color: textColor),
-                      ),
-                      Text(
-                        'Priority: ${task.priority ?? 'N/A'}',
-                        style: TextStyle(color: textColor, fontSize: 14),
-                      ),
-                      Text(
-                        'Due Date: ${task.dueDate ?? 'N/A'}',
-                        style: TextStyle(color: textColor, fontSize: 14),
+                      Column(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              showDeleteConfirmationDialog(context, () async {
+                                await taskNotifier
+                                    .deleteTask(taskState.tasks[index].id);
+                                taskNotifier.getTasks();
+                              });
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () async {
+                              addTaskNotifier.reset();
+                              await Navigator.pushNamed(context, Routes.addTaskScreen,
+                                  arguments: {
+                                    "id": taskState.tasks[index].id,
+                                    "edit": true,
+                                    "reset": true
+                                  });
+                              taskNotifier.getTasks();
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ),
-                Column(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () {
-                        showDeleteConfirmationDialog(context, () async {
-                          await taskNotifier
-                              .deleteTask(taskState.tasks[index].id);
-                          taskNotifier.getTasks();
-                        });
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () async {
-                        addTaskNotifier.reset();
-                        await Navigator.pushNamed(context, Routes.addTaskScreen,
-                            arguments: {
-                              "id": taskState.tasks[index].id,
-                              "edit": true,
-                              "reset": true
-                            });
-                        taskNotifier.getTasks();
-                      },
-                    ),
-                  ],
-                ),
-              ],
+                );
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
