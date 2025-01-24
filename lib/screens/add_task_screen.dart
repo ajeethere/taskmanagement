@@ -6,12 +6,18 @@ import '../states/add_task_state.dart';
 class AddTaskScreen extends ConsumerWidget {
   final _formKey = GlobalKey<FormState>();
 
+  final TextEditingController taskNameController = TextEditingController();
+  final TextEditingController taskDescriptionController =
+  TextEditingController();
+
   AddTaskScreen({super.key});
 
   Future<void> _pickDate(BuildContext context, WidgetRef ref) async {
     DateTime? selectedDate = await AppDateUtils.pickDate(context);
     if (selectedDate != null) {
-      ref.read(taskNotifierProvider.notifier).setDueDate(selectedDate);
+      ref
+          .read(taskNotifierProvider.notifier)
+          .setDueDate(selectedDate.toString().split(" ")[0]);
     }
   }
 
@@ -19,15 +25,18 @@ class AddTaskScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final taskState = ref.watch(taskNotifierProvider);
     final taskNotifier = ref.read(taskNotifierProvider.notifier);
-    final TextEditingController taskNameController =
-        TextEditingController(text: taskState.taskName ?? '');
-    final TextEditingController taskDescriptionController =
-        TextEditingController(text: taskState.taskDescription ?? '');
 
-
+    taskDescriptionController.text = taskState.taskDescription!;
+    taskNameController.text = taskState.taskName!;
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    // final id = args?['id'];
+    final id = args?['id'];
+    final edit = args?['edit'] ?? false;
 
+    if (!taskState.gotData) {
+      if (id != null) {
+        taskNotifier.getTask(id);
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -46,7 +55,9 @@ class AddTaskScreen extends ConsumerWidget {
                   labelText: 'Task Name',
                   border: OutlineInputBorder(),
                 ),
-                onChanged: (value) {},
+                onChanged: (value) {
+                  taskNotifier.setTaskName(value);
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a task name';
@@ -64,7 +75,9 @@ class AddTaskScreen extends ConsumerWidget {
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 3,
-                onChanged: (value) {},
+                onChanged: (value) {
+                  taskNotifier.setTaskDescription(value);
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a description';
@@ -81,15 +94,12 @@ class AddTaskScreen extends ConsumerWidget {
                     child: Text(
                       taskState.dueDate == null
                           ? 'No Due Date Selected'
-                          : 'Due Date: ${taskState.dueDate!.toLocal().toString().split(' ')[0]}',
+                          : 'Due Date: ${taskState.dueDate!.toString()}',
                       style: const TextStyle(fontSize: 16),
                     ),
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      taskNotifier.setTaskName(taskNameController.text);
-                      taskNotifier
-                          .setTaskDescription(taskDescriptionController.text);
                       _pickDate(context, ref);
                     },
                     child: const Text('Select Date'),
@@ -142,11 +152,19 @@ class AddTaskScreen extends ConsumerWidget {
               // Submit Button
               ElevatedButton(
                 onPressed: () {
+                  taskNotifier.setTaskName(taskNameController.text);
+                  taskNotifier
+                      .setTaskDescription(taskDescriptionController.text);
+
                   if (_formKey.currentState!.validate()) {
                     if (taskState.dueDate == null) {
                       return;
                     }
-                    ref.read(taskNotifierProvider.notifier).insertTask();
+                    if (edit) {
+                      ref.read(taskNotifierProvider.notifier).editTask(id);
+                    } else {
+                      ref.read(taskNotifierProvider.notifier).insertTask();
+                    }
                     ref.read(taskNotifierProvider.notifier).reset();
                     Navigator.pop(context);
                   } else {}

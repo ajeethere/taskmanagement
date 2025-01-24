@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutterassignement/router/routes.dart';
+import 'package:flutterassignement/states/add_task_state.dart';
 import 'package:flutterassignement/states/tasks_state.dart';
 import 'package:flutterassignement/utils/utils.dart';
 
@@ -11,6 +12,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final taskState = ref.watch(tasksNotifier);
     final taskNotifier = ref.read(tasksNotifier.notifier);
+    final addTaskNotifier = ref.read(taskNotifierProvider.notifier);
 
     if (!taskState.gotData) {
       taskNotifier.getTasks();
@@ -72,8 +74,9 @@ class HomeScreen extends ConsumerWidget {
                     IconButton(
                       icon: const Icon(Icons.edit),
                       onPressed: () async {
+                        addTaskNotifier.reset();
                         await Navigator.pushNamed(context, Routes.addTaskScreen,
-                            arguments: {"id": taskState.tasks[index].id});
+                            arguments: {"id": taskState.tasks[index].id,"edit":true,"reset":true});
                         taskNotifier.getTasks();
                       },
                     ),
@@ -86,7 +89,8 @@ class HomeScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          await Navigator.pushNamed(context, Routes.addTaskScreen);
+          addTaskNotifier.reset();
+          await Navigator.pushNamed(context, Routes.addTaskScreen,arguments: {"reset": true});
           taskNotifier.getTasks();
         },
         tooltip: 'Add',
